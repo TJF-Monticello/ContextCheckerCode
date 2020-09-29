@@ -1,0 +1,131 @@
+SELECT
+	"tblProject"."ProjectID", 
+	"tblProjectName"."ProjectName", 
+	"tblContext"."ContextID", 
+	"tblContextUnitType"."UnitType", 
+	"tblContext"."QuadratID", 
+	"tblContextLevelType"."LevelType", 
+	"tblContextDepositType"."DepositType", 
+	"tblContext"."FeatureNumber" AS "FeatureNumber", 
+	"tblContextSample"."ContextSampleID", 
+	"tblContextRecoveryMethod"."RecoveryMethod", 
+	"tblContextSampleType"."ContextSampleType", 
+	"tblContext"."ExcavatedBy", 
+	"tblContext"."RecordedBy", 
+	"tblContext"."DateOpened", 
+	"tblContext"."DateClosed", 
+	"tblYesNo"."YesNo" AS "Excavated?", 
+	"tblContext"."ExcavatorSedimentDescription", 
+	"tblContext"."ExcavatorInterpretation", 
+	"tblContext"."DataEntryNotes", 
+	"tblContext"."ContextLength", 
+	"tblContext"."ContextWidth", 
+	"tblContext"."MaximumLithostratigraphicThickness", 
+	"tblContext"."QuadratLength", 
+	"tblContext"."QuadratWidth"
+FROM
+	"tblProject"
+	INNER JOIN
+	"tblProjectName"
+	ON 
+		"tblProject"."ProjectNameID" = "tblProjectName"."ProjectNameID"
+	INNER JOIN
+	"tblContext"
+	ON 
+		"tblContext"."ProjectID" = "tblProject"."ProjectID"
+	LEFT JOIN
+	"tblContextSample"
+	ON 
+		"tblContextSample"."ContextAutoID" = "tblContext"."ContextAutoID"
+	LEFT JOIN
+	"tblContextSampleType"
+	ON 
+		"tblContextSample"."ContextSampleTypeID" = "tblContextSampleType"."ContextSampleTypeID"
+	LEFT JOIN
+	"tblContextUnitType"
+	ON 
+		"tblContext"."UnitTypeID" = "tblContextUnitType"."UnitTypeID"
+	LEFT JOIN
+	"tblContextLevelType"
+	ON 
+		"tblContext"."LevelTypeID" = "tblContextLevelType"."LevelTypeID"
+	LEFT JOIN
+	"tblContextDepositType"
+	ON 
+		"tblContext"."DepositTypeID" = "tblContextDepositType"."DepositTypeID"
+	LEFT JOIN
+	"tblContextRecoveryMethod"
+	ON 
+		"tblContextSample"."RecoveryMethodID" = "tblContextRecoveryMethod"."RecoveryMethodID"
+	LEFT JOIN
+	"tblYesNo"
+	ON 
+		"tblContext"."Excavated" = "tblYesNo"."YesNoID"
+	LEFT JOIN
+	"tblContextFeature"
+	ON 
+		"tblContext"."ProjectID" = "tblContextFeature"."ProjectID" AND
+		"tblContext"."FeatureNumber" = "tblContextFeature"."FeatureNumber"
+	LEFT JOIN
+	"tblContextFeatureType"
+	ON 
+		"tblContextFeature"."FeatureTypeID" = "tblContextFeatureType"."FeatureTypeID"
+WHERE
+	"tblContext"."ContextID" LIKE '9999-3%' AND
+	(
+		(
+			"tblContextLevelType"."LevelType" IS NULL OR
+			"tblContextDepositType"."DepositType" IS NULL OR
+			"tblYesNo"."YesNo" IS NULL
+		) OR
+		(
+			"tblContextDepositType"."DepositType" = 'Surface Collection' AND
+			"tblContextLevelType"."LevelType" <> 'Not Applicable'
+		)
+	) OR
+	"tblContext"."ContextID" LIKE '9999-3%' AND
+	(
+		(
+			(
+				"tblContext"."ContextLength" IS NULL OR
+				"tblContext"."ContextWidth" IS NULL OR
+				"tblContext"."MaximumLithostratigraphicThickness" IS NULL
+			) OR
+			(
+				"tblContextUnitType"."UnitType" = 'Quadrat/Unit' AND
+				"tblContext"."QuadratLength" IS NULL
+			) OR
+			(
+				"tblContextUnitType"."UnitType" = 'Quadrat/Unit' AND
+				"tblContext"."QuadratWidth" IS NULL
+			)
+		) AND
+		(
+			"tblContext"."DataEntryNotes" NOT LIKE '%annot%'
+		)
+		AND
+		("tblContext"."DataEntryNotes" NOT LIKE '%issing%'
+		)
+	) OR
+	"tblContext"."ContextID" LIKE '9999-3%' AND
+	(
+		(
+			"tblContextUnitType"."UnitType" = 'Quadrat/Unit' AND
+			"tblContext"."QuadratID" = ''
+		) OR
+		(
+			"tblContextUnitType"."UnitType" = 'Feature' AND
+			"tblContext"."FeatureNumber" = ''
+		)
+	) OR
+	"tblContext"."ContextID" LIKE '9999-3%' AND
+	(
+		"tblContext"."ExcavatedBy" IS NULL OR
+		"tblContext"."RecordedBy" IS NULL OR
+		"tblContext"."DateOpened" IS NULL OR
+		"tblContext"."DateClosed" IS NULL
+	) OR
+	"tblContext"."ContextID" LIKE '9999-3%' AND
+	"tblContextSample"."ContextSampleID" IS NULL
+ORDER BY
+	"tblContext"."ContextID" ASC
